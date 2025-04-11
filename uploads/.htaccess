@@ -1,0 +1,5 @@
+# Deny direct access to sensitive document types
+<FilesMatch "\.(pdf)$">
+  Order Allow,Deny
+  Deny from all
+</FilesMatch>

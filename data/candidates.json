@@ -22,5 +22,17 @@
         "photoPath": "uploads\/photos\/1744365604_c98b338c0c2f4169a996530d3ef5fac0-1726570380.jpg",
         "registrationDate": "2025-04-11 12:00:04",
         "isVerified": true
+    },
+    "DBT123499": {
+        "fullName": "hemant",
+        "aadhaarNumber": "123456789124",
+        "aadhaarFilePath": "uploads\/1744557103_s2.png",
+        "examType": "DBT-JRF",
+        "examRollNo": "DBT123499",
+        "email": "Hemants8182@gmail.com",
+        "phone": "9058747951",
+        "photoPath": "uploads\/photos\/1744557137_Screenshot (34).png",
+        "registrationDate": "2025-04-13 17:12:17",
+        "isVerified": true
     }
 }

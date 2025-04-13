@@ -9,7 +9,9 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['type'] !== 'candidate') {
 
 // Get candidate data
 $candidates_file = 'data/candidates.json';
+$exams_file = 'data/exams.json';
 $userData = null;
+$upcomingExams = [];
 
 if (file_exists($candidates_file)) {
     $candidates = json_decode(file_get_contents($candidates_file), true);
@@ -26,6 +28,18 @@ if (file_exists($candidates_file)) {
             'isVerified' => $candidateData['isVerified'],
             'email' => $candidateData['email']
         ];
+    }
+}
+
+// Get upcoming exams if verified
+if ($userData && $userData['isVerified'] && file_exists($exams_file)) {
+    $allExams = json_decode(file_get_contents($exams_file), true);
+    $today = date('Y-m-d');
+    
+    foreach ($allExams as $exam) {
+        if ($exam['isPublished'] && $exam['examDate'] >= $today) {
+            $upcomingExams[] = $exam;
+        }
     }
 }
 
@@ -95,7 +109,7 @@ if (isset($_POST['logout'])) {
             </div>
         </div>
         
-        <!-- Mobile menu, toggle classes based on menu state. -->
+        <!-- Mobile menu -->
         <div class="mobile-menu hidden md:hidden">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                 <form method="POST" class="block">
@@ -169,11 +183,12 @@ if (isset($_POST['logout'])) {
                 </div>
             </div>
             
-            <!-- Status Card -->
+            <!-- Main Content Area -->
             <div class="bg-white shadow rounded-lg overflow-hidden md:col-span-2">
+                <!-- Verification Status Section -->
                 <div class="px-4 py-5 sm:p-6">
                     <h2 class="text-lg font-medium text-gray-900">Verification Status</h2>
-                    <p class="mt-1 text-sm text-gray-600">Your identity verification status and next steps</p>
+                    <p class="mt-1 text-sm text-gray-600">Your identity verification status</p>
                 </div>
                 <div class="px-4 py-5 sm:p-6 border-t border-gray-200 space-y-6">
                     <div class="bg-gray-100 p-4 rounded-md">
@@ -234,31 +249,102 @@ if (isset($_POST['logout'])) {
                     
                     <hr class="border-gray-200">
                     
+                    <!-- Exam Portal Section -->
                     <div class="space-y-4">
-                        <h3 class="font-medium">Next Steps</h3>
+                        <h3 class="font-medium">Exam Portal</h3>
                         
                         <?php if ($userData['isVerified']): ?>
-                        <div class="space-y-4">
-                            <p>You can now access your secure exam portal. Click the button below to proceed.</p>
-                            <a href="#" class="inline-block w-full bg-exam-primary text-white py-2 px-4 rounded text-center hover:bg-exam-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-exam-primary">
-                                Access Exam Portal
-                            </a>
-                        </div>
+                            <?php if (!empty($upcomingExams)): ?>
+                                <div class="space-y-4">
+                                    <h4 class="font-medium text-gray-900">Upcoming Exams</h4>
+                                    
+                                    <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+                                        <table class="min-w-full divide-y divide-gray-300">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Exam</th>
+                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date</th>
+                                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Time</th>
+                                                    <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200 bg-white">
+                                                <?php foreach ($upcomingExams as $exam): ?>
+                                                <tr>
+                                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
+                                                        <?= htmlspecialchars($exam['examTitle']) ?>
+                                                        <div class="text-xs text-gray-500"><?= htmlspecialchars($exam['examCode']) ?></div>
+                                                    </td>
+                                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                                        <?= date('d M Y', strtotime($exam['examDate'])) ?>
+                                                    </td>
+                                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                                        <?= htmlspecialchars($exam['examTime']) ?>
+                                                        <?php if (!empty($exam['examDuration'])): ?>
+                                                            <div class="text-xs">(<?= htmlspecialchars($exam['examDuration']) ?> mins)</div>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                                        <a 
+                                                            href="exam-portal.php?exam_id=<?= urlencode($exam['id']) ?>" 
+                                                            class="text-exam-primary hover:text-exam-primary-dark"
+                                                        >
+                                                            Enter Exam
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                                        <div class="flex">
+                                            <div class="flex-shrink-0">
+                                                <i class="fas fa-info-circle text-blue-500"></i>
+                                            </div>
+                                            <div class="ml-3">
+                                                <h3 class="text-sm font-medium text-blue-800">Exam Instructions</h3>
+                                                <div class="mt-2 text-sm text-blue-700">
+                                                    <ul class="list-disc pl-5 space-y-1">
+                                                        <li>Ensure you have a stable internet connection</li>
+                                                        <li>Close all other applications before starting</li>
+                                                        <li>You will need a webcam for proctoring</li>
+                                                        <li>Exam will be automatically submitted when time expires</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <div class="bg-gray-50 p-4 rounded-md">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-calendar-times text-gray-500 text-2xl mr-3"></i>
+                                        <div>
+                                            <h3 class="font-medium text-lg">No Upcoming Exams</h3>
+                                            <p class="text-gray-600">
+                                                There are currently no scheduled exams for you. Please check back later.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                         <?php else: ?>
-                        <div class="space-y-2">
-                            <div class="flex items-start gap-3">
-                                <div class="bg-amber-100 text-amber-700 rounded-full h-6 w-6 flex items-center justify-center flex-shrink-0 mt-0.5">1</div>
-                                <p>Wait for admin verification of your identity documents.</p>
+                            <div class="space-y-2">
+                                <div class="flex items-start gap-3">
+                                    <div class="bg-amber-100 text-amber-700 rounded-full h-6 w-6 flex items-center justify-center flex-shrink-0 mt-0.5">1</div>
+                                    <p>Wait for admin verification of your identity documents.</p>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="bg-amber-100 text-amber-700 rounded-full h-6 w-6 flex items-center justify-center flex-shrink-0 mt-0.5">2</div>
+                                    <p>You will receive an email notification once verified.</p>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="bg-amber-100 text-amber-700 rounded-full h-6 w-6 flex items-center justify-center flex-shrink-0 mt-0.5">3</div>
+                                    <p>After verification, you can access your exam portal.</p>
+                                </div>
                             </div>
-                            <div class="flex items-start gap-3">
-                                <div class="bg-amber-100 text-amber-700 rounded-full h-6 w-6 flex items-center justify-center flex-shrink-0 mt-0.5">2</div>
-                                <p>You will receive an email notification once verified.</p>
-                            </div>
-                            <div class="flex items-start gap-3">
-                                <div class="bg-amber-100 text-amber-700 rounded-full h-6 w-6 flex items-center justify-center flex-shrink-0 mt-0.5">3</div>
-                                <p>After verification, you can access your exam portal.</p>
-                            </div>
-                        </div>
                         <?php endif; ?>
                     </div>
                 </div>

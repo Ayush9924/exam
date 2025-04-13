@@ -48,6 +48,15 @@ if (isset($_POST['verify_candidate'])) {
     }
 }
 
+// Handle exam scheduling messages
+if (isset($_SESSION['success'])) {
+    $success_message = $_SESSION['success'];
+    unset($_SESSION['success']);
+} elseif (isset($_SESSION['error'])) {
+    $error_message = $_SESSION['error'];
+    unset($_SESSION['error']);
+}
+
 // Load all data
 $candidates = getCandidates();
 $exams = getExams();
@@ -147,6 +156,21 @@ $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'pending';
                 <div class="ml-3">
                     <p class="text-sm text-green-700">
                         <?= $success_message ?>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+        
+        <?php if (isset($error_message)): ?>
+        <div class="mb-6 bg-red-50 border-l-4 border-red-400 p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-circle text-red-500"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-red-700">
+                        <?= $error_message ?>
                     </p>
                 </div>
             </div>
@@ -537,11 +561,6 @@ $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'pending';
         <?php endif; ?>
     </div>
     
-    <!-- Candidate View Modal -->
-    <div id="candidateModal" class="hidden fixed inset-0 z-10 overflow-y-auto">
-        <!-- Your existing modal code remains the same -->
-    </div>
-    
     <!-- Schedule Exam Modal -->
     <div id="scheduleExamModal" class="hidden fixed inset-0 z-10 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -626,25 +645,6 @@ $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'pending';
     <script>
         // Toggle mobile menu
         document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenuButton = document.querySelector('.mobile-menu-button');
-            const mobileMenu = document.querySelector('.mobile-menu');
-            
-            if (mobileMenuButton && mobileMenu) {
-                mobileMenuButton.addEventListener('click', function() {
-                    mobileMenu.classList.toggle('hidden');
-                });
-            }
-            
-            // Candidate modal functionality
-            const candidateModal = document.getElementById('candidateModal');
-            const closeModalButton = document.getElementById('close-modal');
-            
-            if (closeModalButton) {
-                closeModalButton.addEventListener('click', function() {
-                    candidateModal.classList.add('hidden');
-                });
-            }
-            
             // Exam modal functionality
             const scheduleExamBtn = document.getElementById('scheduleExamBtn');
             const scheduleExamModal = document.getElementById('scheduleExamModal');
@@ -673,18 +673,39 @@ $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'pending';
             if (examDateInput) {
                 examDateInput.min = formattedDate;
             }
+
+            // Handle form submission
+            const scheduleExamForm = document.getElementById('scheduleExamForm');
+            if (scheduleExamForm) {
+                scheduleExamForm.addEventListener('submit', function(e) {
+                    // Client-side validation
+                    const examTitle = document.getElementById('examTitle').value.trim();
+                    const examCode = document.getElementById('examCode').value.trim();
+                    const examDate = document.getElementById('examDate').value;
+                    const examTime = document.getElementById('examTime').value;
+                    
+                    if (!examTitle || !examCode || !examDate || !examTime) {
+                        e.preventDefault();
+                        alert('Please fill in all required fields');
+                        return false;
+                    }
+                    
+                    // Additional validation can be added here
+                    return true;
+                });
+            }
         });
         
         // Function to view candidate details
         function viewCandidate(candidateId) {
-            // Your existing viewCandidate function remains the same
+            alert('Viewing candidate with ID: ' + candidateId);
+            // In a real application, this would open a modal with detailed candidate info
         }
         
         // Function to edit exam
         function editExam(examId) {
-            // In a real application, this would fetch exam data and populate a form
             alert('Edit exam with ID: ' + examId);
-            // You would implement similar modal functionality as the schedule exam modal
+            // In a real application, this would fetch exam data and populate a form
         }
     </script>
 </body>

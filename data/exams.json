@@ -1,0 +1,15 @@
+[
+    {
+        "id": "67fbe9649bde2",
+        "examTitle": "jrf",
+        "examCode": "jrf-bio-2025",
+        "examDate": "2025-04-13",
+        "examTime": "22:15",
+        "examDuration": "180",
+        "examVenue": "block 33",
+        "examDescription": "",
+        "isPublished": true,
+        "createdAt": "2025-04-13 18:42:12",
+        "modifiedAt": "2025-04-13 19:00:55"
+    }
+]

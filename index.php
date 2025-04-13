@@ -106,10 +106,13 @@
                     </div>
                 </div>
                 <div class="hidden md:flex justify-center">
-                    <div class="bg-white/10 p-6 rounded-lg backdrop-blur-sm">
-                        <i class="fas fa-shield-check text-white text-9xl"></i>
-                    </div>
+                <div class="bg-white/10 p-6 rounded-lg backdrop-blur-sm">
+                <img 
+                    src="s2.png" alt="Shield Icon" class="w-40 h-40 object-cover rounded-md mx-auto">
+                    <i class="fas fa-shield-check text-white text-9xl mt-4 block text-center"></i>
                 </div>
+            </div>
+
             </div>
         </div>
     </section>
@@ -268,11 +271,11 @@
                         </li>
                         <li class="flex items-center">
                             <i class="fas fa-envelope mr-2"></i>
-                            support@secureexamwatch.edu
+                            LPU@secureexamwatch.edu
                         </li>
                         <li class="flex items-center">
                             <i class="fas fa-map-marker-alt mr-2"></i>
-                            New Delhi, India
+                            Punajb, India
                         </li>
                     </ul>
                 </div>

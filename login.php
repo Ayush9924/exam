@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         } else {
             // For demo purposes, use hardcoded admin credentials
             // In a real application, this would check against a database
-            if ($adminEmail === 'admin@example.com' && $adminPassword === 'admin123') {
+            if ($adminEmail === 'karanjio2001@gmail.com' && $adminPassword === 'Mylife.9924') {
                 // Login successful
                 $_SESSION['user'] = [
                     'type' => 'admin',

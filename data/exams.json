@@ -8,8 +8,21 @@
         "examDuration": "180",
         "examVenue": "block 33",
         "examDescription": "",
-        "isPublished": true,
+        "isPublished": false,
         "createdAt": "2025-04-13 18:42:12",
-        "modifiedAt": "2025-04-13 19:00:55"
+        "modifiedAt": "2025-04-16 19:42:38"
+    },
+    {
+        "id": "67fe91b450116",
+        "examTitle": "DBT25",
+        "examCode": "DPT-2025",
+        "examDate": "2025-04-16",
+        "examTime": "01:05",
+        "examDuration": "180",
+        "examVenue": "block 33",
+        "examDescription": "Make sure to bring your Aadhar card",
+        "isPublished": true,
+        "createdAt": "2025-04-15 19:04:52",
+        "modifiedAt": "2025-04-16 19:42:27"
     }
 ]

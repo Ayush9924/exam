@@ -24,15 +24,51 @@
         "isVerified": true
     },
     "DBT123499": {
-        "fullName": "hemant",
-        "aadhaarNumber": "123456789124",
-        "aadhaarFilePath": "uploads\/1744557103_s2.png",
+        "fullName": "Ayush Kumar",
+        "aadhaarNumber": "123456789999",
+        "aadhaarFilePath": "uploads\/1744573768_Screenshot (18).png",
         "examType": "DBT-JRF",
         "examRollNo": "DBT123499",
-        "email": "Hemants8182@gmail.com",
-        "phone": "9058747951",
-        "photoPath": "uploads\/photos\/1744557137_Screenshot (34).png",
-        "registrationDate": "2025-04-13 17:12:17",
+        "email": "karanjio2001@gmail.com",
+        "phone": "8252782508",
+        "photoPath": "uploads\/photos\/1744573843_Screenshot (12).png",
+        "registrationDate": "2025-04-13 21:50:43",
+        "isVerified": false
+    },
+    "DBT123159": {
+        "fullName": "Ahmar Nawab",
+        "aadhaarNumber": "123456789333",
+        "aadhaarFilePath": "uploads\/1744565141_shield.jpg",
+        "examType": "DBT-JRF",
+        "examRollNo": "DBT123159",
+        "email": "ahmar.nawab23@lpu.in",
+        "phone": "9304601953",
+        "photoPath": "uploads\/photos\/1744565192_WhatsApp Image 2025-03-30 at 03.26.40.jpeg",
+        "registrationDate": "2025-04-13 19:26:32",
+        "isVerified": false
+    },
+    "DBT123": {
+        "fullName": "vaishnavi",
+        "aadhaarNumber": "123456781111",
+        "aadhaarFilePath": "uploads\/1744606087_Screenshot (6).png",
+        "examType": "DBT-JRF",
+        "examRollNo": "DBT123",
+        "email": "vaishnavipandey2809@gmail.com",
+        "phone": "9284998874",
+        "photoPath": "uploads\/photos\/1744608341_Screenshot (11).png",
+        "registrationDate": "2025-04-14 07:25:41",
+        "isVerified": true
+    },
+    "DBT123123": {
+        "fullName": "kumar Ayush",
+        "aadhaarNumber": "789456123123",
+        "aadhaarFilePath": "uploads\/1744736471_Screenshot (12).png",
+        "examType": "DBT-JRF",
+        "examRollNo": "DBT123123",
+        "email": "roxyop03@gmail.com",
+        "phone": "8252782508",
+        "photoPath": "uploads\/photos\/1744736510_Screenshot (13).png",
+        "registrationDate": "2025-04-15 19:01:50",
         "isVerified": true
     }
 }

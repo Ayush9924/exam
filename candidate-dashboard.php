@@ -26,7 +26,8 @@ if (file_exists($candidates_file)) {
             'examType' => $candidateData['examType'],
             'registrationDate' => $candidateData['registrationDate'],
             'isVerified' => $candidateData['isVerified'],
-            'email' => $candidateData['email']
+            'email' => $candidateData['email'],
+            'fingerprint_data' => $candidateData['fingerprint_data'] ?? null
         ];
     }
 }
@@ -49,6 +50,24 @@ if (isset($_POST['logout'])) {
     header('Location: login.php');
     exit;
 }
+
+// Handle exam entry with fingerprint verification
+if (isset($_POST['enter_exam']) && isset($_POST['exam_id'])) {
+    if (!empty($_POST['fingerprint_verification'])) {
+        // In a real implementation, verify the fingerprint against stored template
+        // For this demo, we'll just check if fingerprint data exists
+        if ($userData['fingerprint_data']) {
+            $_SESSION['exam_verified'] = true;
+            $_SESSION['current_exam'] = $_POST['exam_id'];
+            header('Location: exam-portal.php');
+            exit;
+        } else {
+            $fingerprintError = "Fingerprint verification failed. Please try again.";
+        }
+    } else {
+        $fingerprintError = "Please complete fingerprint verification";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -59,6 +78,9 @@ if (isset($_POST['logout'])) {
     <title>Candidate Dashboard - SecureExamWatch</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fingerprint Scanner Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@digitalpersona/core@1.5.0/dist/core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@digitalpersona/devices@1.5.0/dist/devices.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -124,6 +146,74 @@ if (isset($_POST['logout'])) {
             </div>
         </div>
     </header>
+    
+    <!-- Fingerprint Verification Modal -->
+    <div id="fingerprintModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                <div>
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                        <i class="fas fa-fingerprint text-blue-600"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-5">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            Fingerprint Verification
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">
+                                Please verify your fingerprint to enter the exam.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-5 sm:mt-6">
+                    <div class="flex flex-col items-center">
+                        <div class="w-64 h-32 bg-gray-100 border border-gray-300 rounded-md flex items-center justify-center mb-4">
+                            <p class="text-sm text-gray-500" id="verificationStatus">Place finger on scanner</p>
+                        </div>
+                        <button 
+                            type="button" 
+                            id="startVerification" 
+                            class="inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-exam-primary hover:bg-exam-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-exam-primary"
+                        >
+                            Start Verification
+                        </button>
+                        <?php if (isset($fingerprintError)): ?>
+                            <p class="mt-2 text-sm text-red-600"><?= htmlspecialchars($fingerprintError) ?></p>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <form method="POST" id="examVerificationForm">
+                        <input type="hidden" name="exam_id" id="examIdInput">
+                        <input type="hidden" name="fingerprint_verification" id="fingerprintVerificationInput">
+                        <input type="hidden" name="enter_exam" value="1">
+                        
+                        <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                            <button 
+                                type="submit" 
+                                id="proceedButton"
+                                class="hidden w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-exam-primary text-base font-medium text-white hover:bg-exam-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-exam-primary sm:col-start-2 sm:text-sm"
+                            >
+                                Proceed to Exam
+                            </button>
+                            <button 
+                                type="button" 
+                                onclick="closeModal()"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-exam-primary sm:mt-0 sm:col-start-1 sm:text-sm"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <div class="container mx-auto px-4 py-8">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
@@ -285,12 +375,12 @@ if (isset($_POST['logout'])) {
                                                         <?php endif; ?>
                                                     </td>
                                                     <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                                        <a 
-                                                            href="exam-portal.php?exam_id=<?= urlencode($exam['id']) ?>" 
+                                                        <button 
+                                                            onclick="openVerificationModal('<?= htmlspecialchars($exam['id']) ?>')"
                                                             class="text-exam-primary hover:text-exam-primary-dark"
                                                         >
                                                             Enter Exam
-                                                        </a>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                                 <?php endforeach; ?>
@@ -311,6 +401,7 @@ if (isset($_POST['logout'])) {
                                                         <li>Close all other applications before starting</li>
                                                         <li>You will need a webcam for proctoring</li>
                                                         <li>Exam will be automatically submitted when time expires</li>
+                                                        <li>Fingerprint verification is required to start the exam</li>
                                                     </ul>
                                                 </div>
                                             </div>
@@ -397,6 +488,73 @@ if (isset($_POST['logout'])) {
             if (mobileMenuButton && mobileMenu) {
                 mobileMenuButton.addEventListener('click', function() {
                     mobileMenu.classList.toggle('hidden');
+                });
+            }
+        });
+        
+        // Fingerprint Verification Modal Functions
+        function openVerificationModal(examId) {
+            document.getElementById('examIdInput').value = examId;
+            document.getElementById('fingerprintModal').classList.remove('hidden');
+        }
+        
+        function closeModal() {
+            document.getElementById('fingerprintModal').classList.add('hidden');
+            document.getElementById('verificationStatus').textContent = 'Place finger on scanner';
+            document.getElementById('proceedButton').classList.add('hidden');
+        }
+        
+        // Fingerprint Verification Implementation
+        document.addEventListener('DOMContentLoaded', function() {
+            const startVerificationBtn = document.getElementById('startVerification');
+            const verificationStatus = document.getElementById('verificationStatus');
+            const fingerprintVerificationInput = document.getElementById('fingerprintVerificationInput');
+            const proceedButton = document.getElementById('proceedButton');
+            
+            if (startVerificationBtn) {
+                startVerificationBtn.addEventListener('click', async function() {
+                    try {
+                        verificationStatus.textContent = "Initializing scanner...";
+                        
+                        // Initialize fingerprint scanner
+                        const devices = await navigator.mediaDevices.enumerateDevices();
+                        const fingerprintDevices = devices.filter(device => 
+                            device.label.toLowerCase().includes('fingerprint') || 
+                            device.kind === 'videoinput'
+                        );
+                        
+                        if (fingerprintDevices.length === 0) {
+                            throw new Error("No fingerprint scanner found. Please connect a compatible device.");
+                        }
+                        
+                        verificationStatus.textContent = "Ready to scan... Place your finger";
+                        
+                        // Simulate fingerprint verification (replace with actual scanner API)
+                        setTimeout(() => {
+                            // In a real implementation, verify against stored fingerprint
+                            verificationStatus.textContent = "Verifying fingerprint...";
+                            
+                            setTimeout(() => {
+                                // Simulate successful verification
+                                verificationStatus.textContent = "Fingerprint verified successfully!";
+                                fingerprintVerificationInput.value = "verified";
+                                proceedButton.classList.remove('hidden');
+                                startVerificationBtn.disabled = true;
+                                
+                                // Visual feedback
+                                const scannerDiv = document.querySelector('#fingerprintModal > div > div > div > div > div > div');
+                                scannerDiv.classList.add('bg-green-50', 'border-green-200');
+                            }, 2000);
+                        }, 1000);
+                        
+                    } catch (error) {
+                        verificationStatus.textContent = "Error: " + error.message;
+                        console.error("Fingerprint error:", error);
+                        
+                        // Visual feedback
+                        const scannerDiv = document.querySelector('#fingerprintModal > div > div > div > div > div > div');
+                        scannerDiv.classList.add('bg-red-50', 'border-red-200');
+                    }
                 });
             }
         });

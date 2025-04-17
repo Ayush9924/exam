@@ -8,10 +8,74 @@ $adminEmail = '';
 $adminPassword = '';
 $loginError = '';
 $activeTab = 'candidate';
+$showForgotPasswordModal = false;
+$forgotPasswordType = ''; // 'candidate' or 'admin'
+$forgotPasswordEmail = '';
+$forgotPasswordRollNo = '';
+$forgotPasswordError = '';
+$forgotPasswordSuccess = '';
 
 // Process form submission
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    if (isset($_POST['login_type']) && $_POST['login_type'] === 'candidate') {
+    if (isset($_POST['forgot_password'])) {
+        // Handle forgot password request
+        $forgotPasswordType = $_POST['forgot_password_type'] ?? '';
+        
+        if ($forgotPasswordType === 'admin') {
+            $forgotPasswordEmail = $_POST['email'] ?? '';
+            $activeTab = 'admin'; // Show admin tab after submission
+            
+            if (empty($forgotPasswordEmail)) {
+                $forgotPasswordError = 'Please enter your email address';
+            } else {
+                // Check if email exists (in a real app, this would check a database)
+                if ($forgotPasswordEmail === 'karanjio2001@gmail.com') {
+                    // Generate a reset token (in a real app, this would be stored in database)
+                    $resetToken = bin2hex(random_bytes(32));
+                    
+                    // In a real app, you would:
+                    // 1. Store the token in database with expiration time
+                    // 2. Send an email with reset link
+                    // 3. Handle the reset process
+                    
+                    $forgotPasswordSuccess = 'If this email exists in our system, you will receive a password reset link shortly.';
+                } else {
+                    // For security, don't reveal if email exists or not
+                    $forgotPasswordSuccess = 'If this email exists in our system, you will receive a password reset link shortly.';
+                }
+            }
+        } elseif ($forgotPasswordType === 'candidate') {
+            $forgotPasswordRollNo = $_POST['rollNo'] ?? '';
+            $activeTab = 'candidate'; // Show candidate tab after submission
+            
+            if (empty($forgotPasswordRollNo)) {
+                $forgotPasswordError = 'Please enter your roll number';
+            } else {
+                // Check if roll number exists (in a real app, this would check a database)
+                $candidates_file = 'data/candidates.json';
+                if (file_exists($candidates_file)) {
+                    $candidates = json_decode(file_get_contents($candidates_file), true);
+                    
+                    if (isset($candidates[$forgotPasswordRollNo])) {
+                        $candidate = $candidates[$forgotPasswordRollNo];
+                        // In a real app, you would:
+                        // 1. Generate a reset token
+                        // 2. Send email/SMS to registered contact
+                        // 3. Handle the reset process
+                        
+                        $forgotPasswordSuccess = 'If this roll number exists in our system, you will receive recovery instructions shortly.';
+                    } else {
+                        // For security, don't reveal if roll number exists or not
+                        $forgotPasswordSuccess = 'If this roll number exists in our system, you will receive recovery instructions shortly.';
+                    }
+                } else {
+                    $forgotPasswordSuccess = 'If this roll number exists in our system, you will receive recovery instructions shortly.';
+                }
+            }
+        }
+        
+        $showForgotPasswordModal = true;
+    } elseif (isset($_POST['login_type']) && $_POST['login_type'] === 'candidate') {
         // Handle candidate login
         $candidateRollNo = $_POST['rollNo'] ?? '';
         $candidateAadhaar = $_POST['aadhaar'] ?? '';
@@ -239,7 +303,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             >
                         </div>
                         <div class="space-y-2">
-                            <label for="aadhaar" class="block text-sm font-medium text-gray-700">Aadhaar Number (Last 4 digits)</label>
+                            <div class="flex items-center justify-between">
+                                <label for="aadhaar" class="block text-sm font-medium text-gray-700">Aadhaar Number (Last 4 digits)</label>
+                                <button
+                                    type="button"
+                                    onclick="openForgotPassword('candidate')"
+                                    class="text-sm text-exam-primary hover:underline focus:outline-none"
+                                >
+                                    Forgot Aadhaar?
+                                </button>
+                            </div>
                             <input
                                 id="aadhaar"
                                 name="aadhaar"
@@ -298,12 +371,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         <div class="space-y-2">
                             <div class="flex items-center justify-between">
                                 <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                                <a
-                                    href="#"
-                                    class="text-sm text-exam-primary hover:underline"
+                                <button
+                                    type="button"
+                                    onclick="openForgotPassword('admin')"
+                                    class="text-sm text-exam-primary hover:underline focus:outline-none"
                                 >
                                     Forgot password?
-                                </a>
+                                </button>
                             </div>
                             <input
                                 id="password"
@@ -353,6 +427,109 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         All data is encrypted and securely stored in compliance with government regulations.
                     </p>
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="fixed inset-0 z-50 flex items-center justify-center <?= $showForgotPasswordModal ? '' : 'hidden' ?>">
+        <div class="fixed inset-0 bg-black opacity-50"></div>
+        <div class="bg-white rounded-lg shadow-xl z-50 w-full max-w-md mx-4">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        <?= $forgotPasswordType === 'admin' ? 'Reset your password' : 'Recover Aadhaar Access' ?>
+                    </h3>
+                    <button type="button" onclick="closeForgotPassword()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <?php if (!empty($forgotPasswordError)): ?>
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-700">
+                                <?= htmlspecialchars($forgotPasswordError) ?>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                
+                <?php if (!empty($forgotPasswordSuccess)): ?>
+                <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-green-700">
+                                <?= htmlspecialchars($forgotPasswordSuccess) ?>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                
+                <?php if (empty($forgotPasswordSuccess)): ?>
+                <form method="POST" class="space-y-4">
+                    <input type="hidden" name="forgot_password" value="1">
+                    <input type="hidden" name="forgot_password_type" value="<?= htmlspecialchars($forgotPasswordType) ?>">
+                    
+                    <?php if ($forgotPasswordType === 'admin'): ?>
+                    <div class="space-y-2">
+                        <label for="forgot-email" class="block text-sm font-medium text-gray-700">Email address</label>
+                        <input
+                            id="forgot-email"
+                            name="email"
+                            type="email"
+                            placeholder="Enter your registered email"
+                            value="<?= htmlspecialchars($forgotPasswordEmail) ?>"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-exam-primary focus:border-exam-primary"
+                            required
+                        >
+                        <p class="text-sm text-gray-500">
+                            We'll send you a link to reset your password
+                        </p>
+                    </div>
+                    <?php else: ?>
+                    <div class="space-y-2">
+                        <label for="forgot-rollNo" class="block text-sm font-medium text-gray-700">Exam Roll Number</label>
+                        <input
+                            id="forgot-rollNo"
+                            name="rollNo"
+                            type="text"
+                            placeholder="Enter your roll number"
+                            value="<?= htmlspecialchars($forgotPasswordRollNo) ?>"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-exam-primary focus:border-exam-primary"
+                            required
+                        >
+                        <p class="text-sm text-gray-500">
+                            We'll send recovery instructions to your registered contact
+                        </p>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <div class="flex justify-end space-x-3 pt-2">
+                        <button type="button" onclick="closeForgotPassword()" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-exam-primary">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-exam-primary hover:bg-exam-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-exam-primary">
+                            <?= $forgotPasswordType === 'admin' ? 'Send Reset Link' : 'Recover Access' ?>
+                        </button>
+                    </div>
+                </form>
+                <?php else: ?>
+                <div class="pt-2">
+                    <button type="button" onclick="closeForgotPassword()" class="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-exam-primary hover:bg-exam-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-exam-primary">
+                        Close
+                    </button>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -451,6 +628,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             document.getElementById('candidate-form').classList.toggle('hidden', tab !== 'candidate');
             document.getElementById('admin-form').classList.toggle('hidden', tab !== 'admin');
         }
+        
+        // Forgot password modal functions
+        function openForgotPassword(type) {
+            document.getElementById('forgotPasswordModal').classList.remove('hidden');
+            // Set the type in a hidden field
+            document.querySelector('input[name="forgot_password_type"]').value = type;
+        }
+        
+        function closeForgotPassword() {
+            document.getElementById('forgotPasswordModal').classList.add('hidden');
+            // Reset form if needed
+            document.querySelector('#forgotPasswordModal form')?.reset();
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('forgotPasswordModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeForgotPassword();
+            }
+        });
     </script>
 </body>
 </html>

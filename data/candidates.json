@@ -21,7 +21,7 @@
         "phone": "9058747951",
         "photoPath": "uploads\/photos\/1744365604_c98b338c0c2f4169a996530d3ef5fac0-1726570380.jpg",
         "registrationDate": "2025-04-11 12:00:04",
-        "isVerified": true
+        "isVerified": false
     },
     "DBT123499": {
         "fullName": "Ayush Kumar",
@@ -69,6 +69,18 @@
         "phone": "8252782508",
         "photoPath": "uploads\/photos\/1744736510_Screenshot (13).png",
         "registrationDate": "2025-04-15 19:01:50",
+        "isVerified": true
+    },
+    "DBT999999": {
+        "fullName": "KA",
+        "aadhaarNumber": "123456789123",
+        "aadhaarFilePath": "uploads\/1745148429_WhatsApp Image 2025-04-14 at 11.06.39.jpeg",
+        "examType": "DBT-JRF",
+        "examRollNo": "DBT999999",
+        "email": "roxyop03@gmail.com",
+        "phone": "8252782508",
+        "photoPath": "uploads\/photos\/1745148470_WhatsApp Image 2025-04-14 at 11.06.39.jpeg",
+        "registrationDate": "2025-04-20 13:27:51",
         "isVerified": true
     }
 }

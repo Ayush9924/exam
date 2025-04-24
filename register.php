@@ -15,6 +15,18 @@ $otp_sent = false;
 $otp_verified = false;
 $debug_otp = ''; // For development - displays OTP on screen
 
+// Email configuration - UPDATE THESE VALUES
+$smtp_host = 'smtp.gmail.com'; // SMTP server
+$smtp_username = 'roxyop03@gmail.com'; // Your Gmail address
+$smtp_password = 'snxb ukju gvpa lyat'; // Use App Password if 2FA is enabled
+$smtp_port = 587;
+$smtp_from_email = 'noreply@secureexamwatch.edu';
+$smtp_from_name = 'SecureExamWatch';
+
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Process form submission
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST['action'])) {
@@ -84,11 +96,56 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 move_uploaded_file($_FILES['aadhaarFile']['tmp_name'], $upload_dir . $file_name);
                 $_SESSION['registration']['aadhaarFilePath'] = $upload_dir . $file_name;
                 
-                // In production, use PHPMailer or similar to send real emails
-                // For development, we'll just display the OTP on screen
-                $otp_sent = true;
-                header('Location: register.php?step=2');
-                exit();
+                // Send OTP email
+                require 'vendor/autoload.php'; // Require PHPMailer
+                
+                $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+                
+                try {
+                    // Server settings
+                    $mail->isSMTP();
+                    $mail->Host       = $smtp_host;
+                    $mail->SMTPAuth   = true;
+                    $mail->Username   = $smtp_username;
+                    $mail->Password   = $smtp_password;
+                    $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                    $mail->Port       = $smtp_port;
+                    
+                    // Enable debugging (for troubleshooting)
+                    $mail->SMTPDebug = 2; // Set to 2 for detailed debug output
+                    $mail->Debugoutput = function($str, $level) {
+                        error_log("SMTP debug level $level: $str");
+                    };
+                    
+                    // Recipients
+                    $mail->setFrom($smtp_from_email, $smtp_from_name);
+                    $mail->addAddress($email, $fullName);
+                    
+                    // Content
+                    $mail->isHTML(true);
+                    $mail->Subject = 'Your SecureExamWatch Verification Code';
+                    $mail->Body    = "
+                        <h2>SecureExamWatch Registration</h2>
+                        <p>Dear $fullName,</p>
+                        <p>Your verification code is: <strong>$otp</strong></p>
+                        <p>This code will expire in 5 minutes.</p>
+                        <p>If you didn't request this, please ignore this email.</p>
+                        <p>Regards,<br>SecureExamWatch Team</p>
+                    ";
+                    $mail->AltBody = "Your verification code is: $otp\nThis code will expire in 5 minutes.";
+                    
+                    $mail->send();
+                    $otp_sent = true;
+                } catch (Exception $e) {
+                    // Log error and show message to user
+                    error_log("Mailer Error: " . $mail->ErrorInfo);
+                    $formErrors['email'] = "Could not send verification email. Error: " . $mail->ErrorInfo;
+                }
+                
+                if ($otp_sent) {
+                    header('Location: register.php?step=2');
+                    exit();
+                }
             }
         }
         // OTP Verification
@@ -119,7 +176,51 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $_SESSION['otp'] = $otp;
                 $_SESSION['otp_expiry'] = time() + 300; // 5 minutes expiry
                 $debug_otp = $otp; // Display new OTP for development
-                $otp_sent = true;
+                
+                // Resend email
+                require 'vendor/autoload.php';
+                
+                $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+                
+                try {
+                    // Server settings
+                    $mail->isSMTP();
+                    $mail->Host       = $smtp_host;
+                    $mail->SMTPAuth   = true;
+                    $mail->Username   = $smtp_username;
+                    $mail->Password   = $smtp_password;
+                    $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                    $mail->Port       = $smtp_port;
+                    
+                    // Enable debugging
+                    $mail->SMTPDebug = 2;
+                    $mail->Debugoutput = function($str, $level) {
+                        error_log("SMTP debug level $level: $str");
+                    };
+                    
+                    // Recipients
+                    $mail->setFrom($smtp_from_email, $smtp_from_name);
+                    $mail->addAddress($_SESSION['otp_email'], $_SESSION['registration']['fullName']);
+                    
+                    // Content
+                    $mail->isHTML(true);
+                    $mail->Subject = 'Your New SecureExamWatch Verification Code';
+                    $mail->Body    = "
+                        <h2>SecureExamWatch Registration</h2>
+                        <p>Dear {$_SESSION['registration']['fullName']},</p>
+                        <p>Your new verification code is: <strong>$otp</strong></p>
+                        <p>This code will expire in 5 minutes.</p>
+                        <p>If you didn't request this, please ignore this email.</p>
+                        <p>Regards,<br>SecureExamWatch Team</p>
+                    ";
+                    $mail->AltBody = "Your new verification code is: $otp\nThis code will expire in 5 minutes.";
+                    
+                    $mail->send();
+                    $otp_sent = true;
+                } catch (Exception $e) {
+                    error_log("Mailer Error: " . $mail->ErrorInfo);
+                    $formErrors['otp'] = "Could not resend verification email. Error: " . $mail->ErrorInfo;
+                }
             }
         }
         // Final submission
@@ -186,6 +287,60 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 ];
                 
                 file_put_contents($candidates_file, json_encode($candidates, JSON_PRETTY_PRINT));
+                
+                // Send confirmation email
+                require 'vendor/autoload.php';
+                
+                $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+                
+                try {
+                    // Server settings
+                    $mail->isSMTP();
+                    $mail->Host       = $smtp_host;
+                    $mail->SMTPAuth   = true;
+                    $mail->Username   = $smtp_username;
+                    $mail->Password   = $smtp_password;
+                    $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                    $mail->Port       = $smtp_port;
+                    
+                    // Recipients
+                    $mail->setFrom($smtp_from_email, $smtp_from_name);
+                    $mail->addAddress($_SESSION['registration']['email'], $_SESSION['registration']['fullName']);
+                    
+                    // Content
+                    $mail->isHTML(true);
+                    $mail->Subject = 'Your SecureExamWatch Registration is Complete';
+                    $mail->Body    = "
+                        <h2>Registration Successful</h2>
+                        <p>Dear {$_SESSION['registration']['fullName']},</p>
+                        <p>Your registration for SecureExamWatch has been successfully submitted with the following details:</p>
+                        
+                        <table style='width:100%; border-collapse: collapse;'>
+                            <tr>
+                                <td style='padding: 8px; border: 1px solid #ddd;'><strong>Exam Type:</strong></td>
+                                <td style='padding: 8px; border: 1px solid #ddd;'>$examType</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 8px; border: 1px solid #ddd;'><strong>Roll Number:</strong></td>
+                                <td style='padding: 8px; border: 1px solid #ddd;'>$examRollNo</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 8px; border: 1px solid #ddd;'><strong>Registration Date:</strong></td>
+                                <td style='padding: 8px; border: 1px solid #ddd;'>" . date('F j, Y') . "</td>
+                            </tr>
+                        </table>
+                        
+                        <p>Your registration is now pending verification. You will receive another email once your documents have been verified.</p>
+                        <p>You can login to your account at any time to check your verification status.</p>
+                        <p>Regards,<br>SecureExamWatch Team</p>
+                    ";
+                    $mail->AltBody = "Your registration for SecureExamWatch has been successfully submitted.\n\nExam Type: $examType\nRoll Number: $examRollNo\n\nYour registration is now pending verification.";
+                    
+                    $mail->send();
+                } catch (Exception $e) {
+                    error_log("Confirmation email failed: " . $mail->ErrorInfo);
+                    // Don't show error to user since registration was successful
+                }
                 
                 $registration_success = true;
                 $step = 4; // Success page
@@ -303,7 +458,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <div class="ml-3">
                         <p class="text-sm text-yellow-700">
                             <strong>Development Note:</strong> Since this is running on localhost, the OTP is displayed here instead of being emailed: 
-                            <span class="font-bold"><?= $debug_otp ?></span>
+                            <span class="font-bold"><?= htmlspecialchars($debug_otp) ?></span>
                         </p>
                     </div>
                 </div>
@@ -348,7 +503,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 autofocus
                             >
                             <?php if (isset($formErrors['fullName'])): ?>
-                                <p class="mt-1 text-sm text-red-600"><?= $formErrors['fullName'] ?></p>
+                                <p class="mt-1 text-sm text-red-600"><?= htmlspecialchars($formErrors['fullName']) ?></p>
                             <?php endif; ?>
                         </div>
                         
@@ -366,7 +521,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             >
                             <p class="text-xs text-gray-500">Enter your 12-digit Aadhaar number without spaces</p>
                             <?php if (isset($formErrors['aadhaarNumber'])): ?>
-                                <p class="mt-1 text-sm text-red-600"><?= $formErrors['aadhaarNumber'] ?></p>
+                                <p class="mt-1 text-sm text-red-600"><?= htmlspecialchars($formErrors['aadhaarNumber']) ?></p>
                             <?php endif; ?>
                         </div>
                         
@@ -383,7 +538,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     required
                                 >
                                 <?php if (isset($formErrors['email'])): ?>
-                                    <p class="mt-1 text-sm text-red-600"><?= $formErrors['email'] ?></p>
+                                    <p class="mt-1 text-sm text-red-600"><?= htmlspecialchars($formErrors['email']) ?></p>
                                 <?php endif; ?>
                             </div>
                             
@@ -400,7 +555,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     required
                                 >
                                 <?php if (isset($formErrors['phone'])): ?>
-                                    <p class="mt-1 text-sm text-red-600"><?= $formErrors['phone'] ?></p>
+                                    <p class="mt-1 text-sm text-red-600"><?= htmlspecialchars($formErrors['phone']) ?></p>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -427,7 +582,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 </div>
                                 <p class="mt-2 text-xs text-gray-500">PDF, JPG or PNG (max. 2MB)</p>
                                 <?php if (isset($formErrors['aadhaarFile'])): ?>
-                                    <p class="mt-1 text-sm text-red-600"><?= $formErrors['aadhaarFile'] ?></p>
+                                    <p class="mt-1 text-sm text-red-600"><?= htmlspecialchars($formErrors['aadhaarFile']) ?></p>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -484,7 +639,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 autofocus
                             >
                             <?php if (isset($formErrors['otp'])): ?>
-                                <p class="mt-1 text-sm text-red-600"><?= $formErrors['otp'] ?></p>
+                                <p class="mt-1 text-sm text-red-600"><?= htmlspecialchars($formErrors['otp']) ?></p>
                             <?php endif; ?>
                         </div>
                         
@@ -547,7 +702,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     autofocus
                                 >
                                 <?php if (isset($formErrors['examRollNo'])): ?>
-                                    <p class="mt-1 text-sm text-red-600"><?= $formErrors['examRollNo'] ?></p>
+                                    <p class="mt-1 text-sm text-red-600"><?= htmlspecialchars($formErrors['examRollNo']) ?></p>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -575,7 +730,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     </div>
                                     <p class="mt-2 text-xs text-gray-500">JPG or PNG (max. 1MB)</p>
                                     <?php if (isset($formErrors['photo'])): ?>
-                                        <p class="mt-1 text-sm text-red-600"><?= $formErrors['photo'] ?></p>
+                                        <p class="mt-1 text-sm text-red-600"><?= htmlspecialchars($formErrors['photo']) ?></p>
                                     <?php endif; ?>
                                 </div>
                                 
@@ -736,7 +891,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             support@secureexamwatch.edu
                         </li>
                         <li class="flex items-center">
-                                                        <i class="fas fa-map-marker-alt mr-2"></i>
+                            <i class="fas fa-map-marker-alt mr-2"></i>
                             New Delhi, India
                         </li>
                     </ul>

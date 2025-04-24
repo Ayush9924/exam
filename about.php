@@ -99,7 +99,7 @@
                 <div class="mb-12">
                     <h2 class="text-2xl md:text-3xl font-bold mb-6 text-exam-dark">Our Story</h2>
                     <p class="text-gray-700 mb-4">
-                        SecureExamWatch was founded in 2023 in response to growing concerns about impersonation and cheating in high-stakes examinations. Our team of academic professionals and technology experts recognized the need for a robust solution that could verify candidate identities with high accuracy while maintaining ease of use.
+                        SecureExamWatch was founded in 2025 in response to growing concerns about impersonation and cheating in high-stakes examinations. Our team of academic professionals and technology experts recognized the need for a robust solution that could verify candidate identities with high accuracy while maintaining ease of use.
                     </p>
                     <p class="text-gray-700">
                         Today, we partner with leading educational institutions and examination bodies across India to ensure the integrity of their examination processes. Our system has successfully verified over 100,000 candidates with a 99.8% accuracy rate.
